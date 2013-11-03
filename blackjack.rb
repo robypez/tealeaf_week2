@@ -57,7 +57,8 @@ class CardDeck
                    { card: 'King', suit: :clubs }
                   ]
   
-  def initialize (game_type = "blackjack")
+  def initialize (cards = [], game_type = "blackjack")
+
     case game_type
     when "blackjack"
      @cards = blackjack(UNIVERSALDECK)
@@ -132,7 +133,6 @@ class Player < People
 end
 
 
-
 class GameDeck
   
   attr_reader :deck
@@ -140,10 +140,6 @@ class GameDeck
   def initialize(number_of_deck = 1)
     @deck = CardDeck.new.cards * number_of_deck
     self.scramble
-  end
-
-  def take_card
-    @deck.shift
   end
 
   def scramble
@@ -169,10 +165,18 @@ class Hand
 
   end
 
-  def receive_card(card)
-    
-    @hand << card.params
+  def print_card
+    "#{card[:card]} of #{card[:suit]}"
+  end
 
+  def receive_card_from(card_deck, show)
+    card = card_deck.deck.shift
+    @hand << card
+    if show 
+      "#{card[:card]} of #{card[:suit]}"
+    else
+      "The card is hidden"
+    end
   end
 
   def check_a?
@@ -216,35 +220,35 @@ class Hand
 
 end
 
-class Card
-  attr_accessor :show
-  attr_reader :suit, :name, :value, :params
+# class Card
+#   attr_accessor :show
+#   attr_reader :suit, :name, :value, :params
 
-  def initialize(card, show = true)
-    @value = card[:value]
-    @suit = card[:suit]
-    @name = card[:card]
-    @params = card
-    @show = show
-  end
+#   def initialize(card, show = true)
+#     @value = card[:value]
+#     @suit = card[:suit]
+#     @name = card[:card]
+#     @params = card
+#     @show = show
+#   end
 
-  def show?
-    @show
-  end 
+#   def show?
+#     @show
+#   end 
 
-  def is_ace?
-    return true if @name == "Ace"
-  end
+#   def is_ace?
+#     return true if @name == "Ace"
+#   end
 
-  def to_s
-    if @show
-      "#{name} of #{suit}"
-    else
-      "The card is hidden"
-    end
-  end
+#   def to_s
+#     if @show
+#       "#{name} of #{suit}"
+#     else
+#       "The card is hidden"
+#     end
+#   end
 
-end
+# end
 
 #I need to go develop a working demop
 
@@ -296,15 +300,7 @@ end
 
 blackjack = BlackJack.new
 game = GameDeck.new
-card1 = Card.new(game.take_card)
-card2 = Card.new(game.take_card)
-card3 = Card.new(game.take_card)
-card4 = Card.new(game.take_card)
-player_hand = Hand.new("player")
-player_hand.receive_card(card1)
-player_hand.receive_card(card2)
-player_hand.receive_card(card3)
-player_hand.receive_card(card4)
+
 
 
 binding.pry
