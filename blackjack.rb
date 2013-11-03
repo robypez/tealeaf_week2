@@ -81,41 +81,52 @@ end
 
 class People
 
-  def initialize
+  attr_accessor :balance, :blackjack, :win, :loss, :type
+
+  def initialize(type = :dealer, balance = 0, win = 0, loss = 0, blackjack = 0)
+    @blackjack = blackjack
+    @loss = loss
+    @win = win  
+    @balance = balance
+    @type = type
 
   end
 
-  def status
-
-  end
-
-  def balance
-
-  end
-
-  def stay
-
-  end
-
-  def hit
-
-  end
-
-  def bust
-
+  def print_balance
+    @balance
   end
 
 end
 
 class Dealer < People
+  MUST_STAY = 17
+
+  def initialize
+    super
+  end
+
+  def status
+    "Dealer wins #{@win} times, lose #{loss} times. #{blackjack} blackjack"
+  end
 
 end
 
 
 class Player < People
 
-  def bet
+  attr_reader :name
 
+  def initialize(name)
+    @name = name
+    super(:player,10000)
+  end
+
+  def bet(money)
+    @balance -= money
+  end
+
+  def status
+    "#{name} wins #{@win} times, lose #{loss} times. #{blackjack} blackjack"
   end
 
 end
@@ -165,6 +176,7 @@ class Hand
       @ace_number += 1
     end
     @hand << card.params
+    @value += card.value
   end
 
   def check_a?
@@ -179,16 +191,17 @@ class Hand
     end
   end
 
-  def value
-     @value = @hand.map { |s| s[:value] }.reduce(0, :+)
-  end
-
   def compensate_ace_value
-    @ace_number.times { @value = @value - 10 if @value > 21 }
+    @ace_number.times { @value -= 10 if @value > 21 }
+    return @value
   end
 
   def to_s
     @hand.each{ |card| puts "#{card[:card]} of #{card[:suit]}" }
+  end
+
+  def bust?
+    return true if @value > 21 else return false
   end
 
 end
@@ -223,7 +236,10 @@ class Card
 
 end
 
-class Match
+#I need to go develop a working demo to write the match object
+
+class Match(*players)
+@@match_numbers
 
   def initialize
 
@@ -256,7 +272,7 @@ class BlackJack
       choice = gets.chomp
       case choice
       when "1"
-        puts "gioco"
+        puts "game"
       when "2"
         exit
       else
