@@ -3,58 +3,58 @@ require "pry"
 class CardDeck 
   attr_reader :cards
 
-  UNIVERSALDECK = [{ card: 'Ace', suit: :spades },
-                   { card: '2', suit: :spades },
-                   { card: '3', suit: :spades },
-                   { card: '4', suit: :spades },
-                   { card: '5', suit: :spades },
-                   { card: '6', suit: :spades },
-                   { card: '7', suit: :spades },
-                   { card: '8', suit: :spades },
-                   { card: '9', suit: :spades },
-                   { card: '10', suit: :spades },
-                   { card: 'Jack', suit: :spades },
-                   { card: 'Queen', suit: :spades },
-                   { card: 'King', suit: :spades },
-                   { card: 'Ace', suit: :hearts },
-                   { card: '2', suit: :hearts },
-                   { card: '3', suit: :hearts },
-                   { card: '4', suit: :hearts },
-                   { card: '5', suit: :hearts },
-                   { card: '6', suit: :hearts },
-                   { card: '7', suit: :hearts },
-                   { card: '8', suit: :hearts },
-                   { card: '9', suit: :hearts },
-                   { card: '10', suit: :hearts },
-                   { card: 'Jack', suit: :hearts },
-                   { card: 'Queen', suit: :hearts },
-                   { card: 'King', suit: :hearts },
-                   { card: 'Ace', suit: :diamonds },
-                   { card: '2', suit: :diamonds },
-                   { card: '3', suit: :diamonds },
-                   { card: '4', suit: :diamonds },
-                   { card: '5', suit: :diamonds },
-                   { card: '6', suit: :diamonds },
-                   { card: '7', suit: :diamonds },
-                   { card: '8', suit: :diamonds },
-                   { card: '9', suit: :diamonds },
-                   { card: '10', suit: :diamonds },
-                   { card: 'Jack', suit: :diamonds },
-                   { card: 'Queen', suit: :diamonds },
-                   { card: 'King', suit: :diamonds },
-                   { card: 'Ace', suit: :clubs },
-                   { card: '2', suit: :clubs },
-                   { card: '3', suit: :clubs },
-                   { card: '4', suit: :clubs },
-                   { card: '5', suit: :clubs },
-                   { card: '6', suit: :clubs },
-                   { card: '7', suit: :clubs },
-                   { card: '8', suit: :clubs },
-                   { card: '9', suit: :clubs },
-                   { card: '10', suit: :clubs },
-                   { card: 'Jack', suit: :clubs },
-                   { card: 'Queen', suit: :clubs },
-                   { card: 'King', suit: :clubs }
+  UNIVERSALDECK = [{ card_name: 'Ace', suit: :spades },
+                   { card_name: '2', suit: :spades },
+                   { card_name: '3', suit: :spades },
+                   { card_name: '4', suit: :spades },
+                   { card_name: '5', suit: :spades },
+                   { card_name: '6', suit: :spades },
+                   { card_name: '7', suit: :spades },
+                   { card_name: '8', suit: :spades },
+                   { card_name: '9', suit: :spades },
+                   { card_name: '10', suit: :spades },
+                   { card_name: 'Jack', suit: :spades },
+                   { card_name: 'Queen', suit: :spades },
+                   { card_name: 'King', suit: :spades },
+                   { card_name: 'Ace', suit: :hearts },
+                   { card_name: '2', suit: :hearts },
+                   { card_name: '3', suit: :hearts },
+                   { card_name: '4', suit: :hearts },
+                   { card_name: '5', suit: :hearts },
+                   { card_name: '6', suit: :hearts },
+                   { card_name: '7', suit: :hearts },
+                   { card_name: '8', suit: :hearts },
+                   { card_name: '9', suit: :hearts },
+                   { card_name: '10', suit: :hearts },
+                   { card_name: 'Jack', suit: :hearts },
+                   { card_name: 'Queen', suit: :hearts },
+                   { card_name: 'King', suit: :hearts },
+                   { card_name: 'Ace', suit: :diamonds },
+                   { card_name: '2', suit: :diamonds },
+                   { card_name: '3', suit: :diamonds },
+                   { card_name: '4', suit: :diamonds },
+                   { card_name: '5', suit: :diamonds },
+                   { card_name: '6', suit: :diamonds },
+                   { card_name: '7', suit: :diamonds },
+                   { card_name: '8', suit: :diamonds },
+                   { card_name: '9', suit: :diamonds },
+                   { card_name: '10', suit: :diamonds },
+                   { card_name: 'Jack', suit: :diamonds },
+                   { card_name: 'Queen', suit: :diamonds },
+                   { card_name: 'King', suit: :diamonds },
+                   { card_name: 'Ace', suit: :clubs },
+                   { card_name: '2', suit: :clubs },
+                   { card_name: '3', suit: :clubs },
+                   { card_name: '4', suit: :clubs },
+                   { card_name: '5', suit: :clubs },
+                   { card_name: '6', suit: :clubs },
+                   { card_name: '7', suit: :clubs },
+                   { card_name: '8', suit: :clubs },
+                   { card_name: '9', suit: :clubs },
+                   { card_name: '10', suit: :clubs },
+                   { card_name: 'Jack', suit: :clubs },
+                   { card_name: 'Queen', suit: :clubs },
+                   { card_name: 'King', suit: :clubs }
                   ]
   
   def initialize (cards = [], game_type = "blackjack")
@@ -67,12 +67,12 @@ class CardDeck
 
   def blackjack(universal_deck)
     universal_deck.each do |card|
-      if card[:card] == "Ace"
+      if card[:card_name] == "Ace"
         value = 11
-      elsif card[:card].to_i == 0
+      elsif card[:card_name].to_i == 0
         value = 10
       else
-        value = card[:card].to_i
+        value = card[:card_name].to_i
       end
       card[:value] = value
     end
@@ -138,8 +138,17 @@ class GameDeck
   attr_reader :deck
 
   def initialize(number_of_deck = 1)
-    @deck = CardDeck.new.cards * number_of_deck
-    self.scramble
+    @deck = []
+    @origin = create_deck(CardDeck.new.cards)
+    @deck = @deck * number_of_deck
+    scramble
+  end
+
+  def create_deck(source_deck)
+    source_deck.each_with_index do |value, index|
+      index = Card.new(value)
+      @deck << index
+    end
   end
 
   def scramble
@@ -165,22 +174,14 @@ class Hand
 
   end
 
-  def print_card
-    "#{card[:card]} of #{card[:suit]}"
-  end
-
-  def receive_card_from(card_deck, show)
+  def receive_card(card_deck)
     card = card_deck.deck.shift
     @hand << card
-    if show 
-      "#{card[:card]} of #{card[:suit]}"
-    else
-      "The card is hidden"
-    end
+    
   end
 
   def check_a?
-    @hand.any? { |card| card[:card] == 'Ace' }
+    @hand.any? { |card| card.name == 'Ace' }
   end
 
   def check_blackjack?
@@ -199,58 +200,57 @@ class Hand
   end
 
   def to_s
-    @hand.each{ |card| puts "#{card[:card]} of #{card[:suit]}" }
+    @hand.each{ |card| puts "#{card.name} of #{card.suit}" }
   end
 
   def bust?
-    return true if @value > 21 else return false
+    return true if value > 21 else return false
   end
 
   def value
-    @hand.map { |s| s[:value] }.reduce(0, :+)
+    @hand.map { |s| s.value }.reduce(0, :+)
   end
 
   def ace_number
     count = 0
     @hand.each do |card|
-     count = count + 1 if card[:card] == "Ace"
+     count = count + 1 if card.name == "Ace"
     end
     return count
   end
 
 end
 
-# class Card
-#   attr_accessor :show
-#   attr_reader :suit, :name, :value, :params
+class Card
+  attr_accessor :show
+  attr_reader :suit, :name, :value
 
-#   def initialize(card, show = true)
-#     @value = card[:value]
-#     @suit = card[:suit]
-#     @name = card[:card]
-#     @params = card
-#     @show = show
-#   end
+  def initialize(card, show = true)
+    @value = card[:value]
+    @suit = card[:suit]
+    @name = card[:card_name]
+    @show = show
+  end
 
-#   def show?
-#     @show
-#   end 
+  def show?
+    @show
+  end 
 
-#   def is_ace?
-#     return true if @name == "Ace"
-#   end
+  def is_ace?
+    return true if @name == "Ace"
+  end
 
-#   def to_s
-#     if @show
-#       "#{name} of #{suit}"
-#     else
-#       "The card is hidden"
-#     end
-#   end
+  def to_s
+    if @show
+      "#{name} of #{suit}"
+    else
+      "The card is hidden"
+    end
+  end
 
-# end
+end
 
-#I need to go develop a working demop
+#I need to go develop a working demo
 
 class Match
 
@@ -300,7 +300,10 @@ end
 
 blackjack = BlackJack.new
 game = GameDeck.new
-
+hand = Hand.new("roby")
+hand.receive_card(game)
+hand.receive_card(game)
+hand.receive_card(game)
 
 
 binding.pry

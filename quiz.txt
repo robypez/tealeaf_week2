@@ -43,7 +43,7 @@ end
 
 # Can you call instance methods of the same class from other instance methods in that class?
 
-Generally no, but you can use self 
+Yes!
 
 # When you get stuck, what's the process you use to try to trap the error?
 
