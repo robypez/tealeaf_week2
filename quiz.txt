@@ -1,0 +1,50 @@
+# Name what each of the below is:
+# a = 1 # => ex. a is a local variable, and is a Fixnum object with value 1
+# @a = 2 
+
+istance variable
+
+# user = User.new
+
+user is an object of class User
+# user.name
+
+name is a getter method
+
+# user.name = "Joe"
+
+name is a setter method
+
+# How does a class mixin a module?
+
+include ModuleName
+
+# What's the difference between class variables and instance variables?
+
+Class variable are related to the class, istance variable are related to the objects that class creates and live with the object.
+
+# What does attr_accessor do?
+
+Give the setter and getter method to an istance variable of a given class
+
+# How would you describe this expression: Dog.some_method
+
+it's a Class method
+
+# In Ruby, what's the difference between subclassing and mixing in modules?
+
+every class must have only a superior classe. Using modules you can give the same behavior to multiple class
+
+# Given that I can instantiate a user like this: User.new('Bob'), what would the initialize method look like for the User class?
+
+def initialize(name)
+  @name = name
+end
+
+# Can you call instance methods of the same class from other instance methods in that class?
+
+Generally no, but you can use self 
+
+# When you get stuck, what's the process you use to try to trap the error?
+
+Debug, and binding.pry help a lot!
