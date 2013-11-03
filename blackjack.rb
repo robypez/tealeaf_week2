@@ -161,22 +161,18 @@ class GameDeck
 end
 
 class Hand
-  attr_reader :owner, :hand, :value, :ace_number
+  attr_reader :owner, :hand
 
   def initialize(owner, hand = [])
     @hand = hand
     @owner = owner
-    @value = 0
-    @ace_number = 0
 
   end
 
   def receive_card(card)
-    if card.is_ace?
-      @ace_number += 1
-    end
+    
     @hand << card.params
-    @value += card.value
+
   end
 
   def check_a?
@@ -192,8 +188,10 @@ class Hand
   end
 
   def compensate_ace_value
-    @ace_number.times { @value -= 10 if @value > 21 }
-    return @value
+    aces = ace_number
+    hand_value = value
+    aces.times { hand_value -= 10 if hand_value > 21 }
+    return hand_value
   end
 
   def to_s
@@ -202,6 +200,18 @@ class Hand
 
   def bust?
     return true if @value > 21 else return false
+  end
+
+  def value
+    @hand.map { |s| s[:value] }.reduce(0, :+)
+  end
+
+  def ace_number
+    count = 0
+    @hand.each do |card|
+     count = count + 1 if card[:card] == "Ace"
+    end
+    return count
   end
 
 end
@@ -236,10 +246,9 @@ class Card
 
 end
 
-#I need to go develop a working demo to write the match object
+#I need to go develop a working demop
 
-class Match(*players)
-@@match_numbers
+class Match
 
   def initialize
 
@@ -272,7 +281,7 @@ class BlackJack
       choice = gets.chomp
       case choice
       when "1"
-        puts "game"
+        puts "gioco"
       when "2"
         exit
       else
@@ -289,9 +298,14 @@ blackjack = BlackJack.new
 game = GameDeck.new
 card1 = Card.new(game.take_card)
 card2 = Card.new(game.take_card)
+card3 = Card.new(game.take_card)
+card4 = Card.new(game.take_card)
 player_hand = Hand.new("player")
 player_hand.receive_card(card1)
 player_hand.receive_card(card2)
+player_hand.receive_card(card3)
+player_hand.receive_card(card4)
+
 
 binding.pry
 
