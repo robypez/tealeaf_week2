@@ -122,8 +122,12 @@ class Player < People
     super(:player,10000)
   end
 
-  def bet(money)
+  def lose(money)
     @balance -= money
+  end
+
+  def win(money)
+    @balance += money
   end
 
   def status
@@ -204,7 +208,7 @@ class Hand
   end
 
   def bust?
-    return true if value > 21 else return false
+    return true if value > 21
   end
 
   def value
@@ -250,12 +254,40 @@ class Card
 
 end
 
-#I need to go develop a working demo
+#I need to develop a working demo to fill the match class
 
 class Match
+@@stats_wins = 0
+@@stats_lose = 0
+@@stats_blackjack = 0
+@@total_matches = 0
 
-  def initialize
+# here I will pass players as array of objects. 
 
+  def initialize(*players)
+    @@total_matches += 1
+  end
+
+
+  def table_statistic
+    "#{@@stats_wins} total wins, #{@@stats_blackjack} blackjack and \
+     #{@@stats_lose} loses in #{@@total_matches} matches"
+  end
+
+  def match_win
+    @@stats_wins += 1
+  end
+
+  def match_lose
+    @@stats_lose += 1
+  end
+
+  def match_blackjack
+    @@stats_blackjack += 1
+  end
+
+  def play
+    #here i will put the single match procedure
   end
 
 end
@@ -274,8 +306,7 @@ class BlackJack
   include Messages
 
   def initialize
-    game = GameDeck.new(4)
-   
+    dealer = Dealer.new
   end
 
   def run
