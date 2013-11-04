@@ -269,7 +269,7 @@ class Match
   end
 
 
-  def table_statistic
+  def self.table_statistic
     "#{@@stats_wins} total wins, #{@@stats_blackjack} blackjack and \
      #{@@stats_lose} loses in #{@@total_matches} matches"
   end
