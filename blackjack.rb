@@ -77,65 +77,7 @@ class CardDeck
       card[:value] = value
     end
   end
-
 end
-
-class People
-
-  attr_accessor :balance, :blackjack, :win, :loss, :type
-
-  def initialize(type = :dealer, balance = 0, win = 0, loss = 0, blackjack = 0)
-    @blackjack = blackjack
-    @loss = loss
-    @win = win  
-    @balance = balance
-    @type = type
-
-  end
-
-  def print_balance
-    @balance
-  end
-
-end
-
-class Dealer < People
-  MUST_STAY = 17
-
-  def initialize
-    super
-  end
-
-  def status
-    "Dealer wins #{@win} times, lose #{loss} times. #{blackjack} blackjack"
-  end
-
-end
-
-
-class Player < People
-
-  attr_reader :name
-
-  def initialize(name)
-    @name = name
-    super(:player,10000)
-  end
-
-  def lose(money)
-    @balance -= money
-  end
-
-  def win(money)
-    @balance += money
-  end
-
-  def status
-    "#{name} wins #{@win} times, lose #{loss} times. #{blackjack} blackjack"
-  end
-
-end
-
 
 class GameDeck
   
@@ -149,9 +91,8 @@ class GameDeck
   end
 
   def create_deck(source_deck)
-    source_deck.each_with_index do |value, index|
-      index = Card.new(value)
-      @deck << index
+    source_deck.each do |value|
+      @deck << Card.new(value)
     end
   end
 
@@ -159,76 +100,15 @@ class GameDeck
     @deck.shuffle!
   end
 
-  def card_number
-    @deck.size
-  end
-
   def empty?
     return true if @deck.size = 0
   end
-
-end
-
-class Hand
-  attr_reader :owner, :hand
-
-  def initialize(owner, hand = [])
-    @hand = hand
-    @owner = owner
-
-  end
-
-  def receive_card(card_deck)
-    card = card_deck.deck.shift
-    @hand << card
-    
-  end
-
-  def check_a?
-    @hand.any? { |card| card.name == 'Ace' }
-  end
-
-  def check_blackjack?
-    if @hand.size == 2 && @value == 21 
-      return true
-    else 
-      return false
-    end
-  end
-
-  def compensate_ace_value
-    aces = ace_number
-    hand_value = value
-    aces.times { hand_value -= 10 if hand_value > 21 }
-    return hand_value
-  end
-
-  def to_s
-    @hand.each{ |card| puts "#{card.name} of #{card.suit}" }
-  end
-
-  def bust?
-    return true if value > 21
-  end
-
-  def value
-    @hand.map { |s| s.value }.reduce(0, :+)
-  end
-
-  def ace_number
-    count = 0
-    @hand.each do |card|
-     count = count + 1 if card.name == "Ace"
-    end
-    return count
-  end
-
 end
 
 class Card
   attr_accessor :show
-  attr_reader :suit, :name, :value
-
+  attr_reader :name, :value, :suit
+  
   def initialize(card, show = true)
     @value = card[:value]
     @suit = card[:suit]
@@ -251,91 +131,443 @@ class Card
       "The card is hidden"
     end
   end
-
 end
 
-#I need to develop a working demo to fill the match class
+class Dealer
+  MUST_STAY = 17
+end
+
+class Player
+
+  attr_reader :name
+  attr_accessor :balance
+
+  def initialize(name)
+    @name = name
+    @balance = 10000
+  end
+
+  def status
+    "#{name} has #{@balance}$"
+  end
+
+  def win(money)
+    @balance = money + money + @balance
+  end
+
+  def win_bj(money)
+    @balance = @balance + (money + money + money/2)
+  end
+end
+
+class Hand
+  attr_reader :player
+  attr_accessor :bet, :status, :cards
+
+  def initialize(player)
+    @cards = []
+    @player = player
+    @bet = 0
+    @status = :no_bust_no_bj
+  end
+
+  def receive_card(card_deck, show = true)
+    card = card_deck.deck.shift
+    card.show = show
+    @cards << card
+  end
+
+  def is_blackjack?
+    if @cards.size == 2 && value == 21 
+      return true
+    else 
+      return false
+    end
+  end
+
+  def to_s
+    @cards.each{ |card| puts card.to_s }
+  end
+
+  def value
+    aces = ace_number
+    hand_value = @cards.map { |s| s.value }.reduce(0, :+)
+    aces.times { hand_value -= 10 if hand_value > 21 }
+    return hand_value
+  end
+
+  def ace_number
+    count = 0
+    @cards.each do |card|
+     count = count + 1 if card.name == "Ace"
+    end
+    return count
+  end
+
+  def can_split?
+    return true if value == 20 && ace_number == 0 && @cards.size == 2
+  end
+
+  def split
+    splitted_card = @cards.pop
+    return splitted_card
+  end
+end
 
 class Match
-@@stats_wins = 0
-@@stats_lose = 0
-@@stats_blackjack = 0
-@@total_matches = 0
 
-# here I will pass players as array of objects. 
-
-  def initialize(*players)
-    @@total_matches += 1
-  end
-
-
-  def self.table_statistic
-    "#{@@stats_wins} total wins, #{@@stats_blackjack} blackjack and \
-     #{@@stats_lose} loses in #{@@total_matches} matches"
-  end
-
-  def match_win
-    @@stats_wins += 1
-  end
-
-  def match_lose
-    @@stats_lose += 1
-  end
-
-  def match_blackjack
-    @@stats_blackjack += 1
+  def initialize(dealer, players, game_type)
+    @player_hands = []
+    @dealer_hand = Hand.new(dealer) 
+    @players = players.each {|player| @player_hands << Hand.new(player)}
+    @deck = GameDeck.new(game_type)
+    play
   end
 
   def play
-    #here i will put the single match procedure
+    bet
+    deal_card_dealer(false)
+    deal_card
+    deal_card_dealer
+    deal_card
+    check_player_blackjack(@player_hands)
+    check_dealer_blackjack
+
+    if player_blackjack_how_many? == @player_hands.size && @dealer_hand.status == :blackjack
+      who_win
+    elsif player_blackjack_how_many? > 0 && @dealer_hand.status == :blackjack
+      player_turn
+      who_win
+    elsif player_blackjack_how_many? == @player_hands.size && @dealer_hand.status == :no_bust_no_bj
+      who_win
+    else
+      player_turn
+      dealer_turn
+      who_win
+    end 
+
+  end
+
+  private
+
+  def deal_card_dealer(show = true)
+    @dealer_hand.receive_card(@deck, show)
+  end
+
+  def deal_card
+    @player_hands.each do |player|
+      player.receive_card(@deck)
+    end
+  end
+
+  def check_player_blackjack(player_hands)
+    player_hands.each do |hand|
+      if hand.is_blackjack?
+        puts "Wow, #{hand.player.name} has Blackjack"
+        hand.status = :blackjack
+        end
+    end
+  end
+
+  def player_blackjack_how_many?
+    bj = 0
+    @player_hands.each do |hand|
+      if hand.status == :blackjack
+        bj += 1
+      end   
+    end
+    return bj
+  end
+
+  def check_dealer_blackjack 
+    if @dealer_hand.is_blackjack?
+        puts "Wow, dealer has Blackjack"
+        @dealer_hand.status = :blackjack
+    end   
+  end
+
+  def bet
+    @player_hands.each do |hand|
+      puts "Hi #{hand.player.name}, you have #{hand.player.balance}$"
+      puts "How much do you want to bet?"
+      loop do
+        input = gets.chomp.to_i
+        if input > hand.player.balance
+          puts "You don't have this money!!"
+        elsif input <= hand.player.balance
+          hand.bet = input
+          hand.player.balance -= input
+          break
+        else
+          puts "Type amount"
+        end
+      end
+    end
+  end
+
+  def player_turn
+
+    puts "Dealer has these cards"
+    @dealer_hand.to_s
+    puts
+
+    @player_hands.each_with_index do |hand,index|
+      if hand.status == :no_bust_no_bj
+        puts "#{hand.player.name}, you have these cards: "
+        hand.to_s
+
+        while hand.value < 22
+
+          puts
+          puts 'What do you want do do?'
+          puts '1) Hit'
+          puts '2) Stay'
+          puts '3) Split' if hand.can_split?
+          
+          choice = gets.chomp
+
+          if choice == '1'
+            puts 'You choose to turn card'
+            hand.receive_card(@deck)
+            puts "#{hand.player.name}, you have these cards: "
+            hand.to_s
+            
+            if hand.value > 21
+              puts "You busted with #{hand.value}, I'm sorry"
+              hand.status = :busted
+              break
+            elsif hand.value == 21
+              break              
+            else
+              puts "You have #{hand.value}. What do you want to do?"
+            end
+          elsif choice == '3'
+            binding.pry
+            splitted_hands = []
+            new_hand = Hand.new(hand.player)
+            new_hand.cards << hand.split
+            hand.receive_card(@deck)
+            new_hand.receive_card(@deck)
+            splitted_hands << hand
+            splitted_hands << new_hand
+            check_player_blackjack(splitted_hands)
+            @backup = @player_hands.shift(index+1)
+            @player_hands = splitted_hands + @player_hands
+            exit
+            player_turn
+            
+          elsif choice == '2'
+
+            break
+          else
+            if !['1', '2', '3' ].include?(choice)
+            puts 'Error: you must enter 1 or 2'
+            end
+          end
+        end
+      end
+    end
+
+  end
+
+  def dealer_turn
+    puts "Dealer has"
+    @dealer_hand.cards.each {|card| card.show = true}
+    @dealer_hand.to_s
+    puts
+
+    while @dealer_hand.value < Dealer::MUST_STAY
+      puts "The dealer has #{@dealer_hand.value} and must turn another card"
+      @dealer_hand.receive_card(@deck)
+      puts "Dealer now has #{@dealer_hand.value}"
+      @dealer_hand.to_s
+    
+      if @dealer_hand.value.between?(Dealer::MUST_STAY, 21)
+        puts "Dealer has #{@dealer_hand.value} and must stay"
+        break
+      elsif @dealer_hand.value > 21
+        puts 'Dealer bust'
+        @dealer_hand.status = :busted
+        break
+      end
+    end
+  end
+
+  def who_win
+    case @dealer_hand.status
+    when :no_bust_no_bj
+      @player_hands.each do |hand|
+        case hand.status 
+        when :busted
+          puts "#{hand.player.name} busted"
+        when :blackjack
+          puts "#{hand.player.name} win with Blackjack"
+          hand.player.win_bj(hand.bet)
+        when :no_bust_no_bj
+          if hand.value >= @dealer_hand.value 
+            puts "#{hand.player.name} win with #{hand.value} against #{@dealer_hand.value}"
+            hand.player.win(hand.bet)
+          else
+            puts "#{hand.player.name} lose with #{hand.value} against #{@dealer_hand.value}"
+          end
+        end
+      end
+    when :busted
+      @player_hands.each do |hand|
+        case hand.status 
+        when :busted
+          puts "#{hand.player.name} busted"
+        when :blackjack
+          puts "#{hand.player.name} win with Blackjack"
+          hand.player.win_bj(hand.bet)
+        when :no_bust_no_bj
+          puts "#{hand.player.name} win, dealer bust"
+          hand.player.win(hand.bet)
+        end
+      end
+    when :blackjack
+      @player_hands.each do |hand|
+        if hand.status == :blackjack
+          puts "#{hand.player.name} wins with Blackjack"
+          hand.player.win_bj(hand.bet)
+        else
+          puts "#{hand.player.name} loses, dealer has Blackjack"
+        end
+      end
+     end 
   end
 
 end
 
 class BlackJack
 
-  module Messages
-    def welcome_message
-      puts "Welcome to Las Vegas. Do you want to play Blackjack? "
+  module Interface
+
+    def game_type
+      
+      puts "You can play Blackjack with a single deck or 4 deck. Choose game type "
       puts
-      puts "1) Yes, I play"
-      puts "2) No, I leave"
-    end
-  end
+      puts "1) Single Deck"
+      puts "2) Four Deck"
 
-  include Messages
-
-  def initialize
-    dealer = Dealer.new
-  end
-
-  def run
-    self.welcome_message
-
-    while true 
-      choice = gets.chomp
-      case choice
+      choice_2 = gets.chomp
+      case choice_2
       when "1"
-        puts "gioco"
+        @game_type = 1
       when "2"
-        exit
-      else
-        puts "Wrong selection, type again"
+        @game_type = 4
+      end
+      
+    end
+
+    def players_number
+      puts "How many players?"
+      @players_number = gets.chomp.to_i
+    end
+
+    def clear_screen
+     puts "\e[H\e[2J"
+    end
+   
+    def menu
+      loop do
+
+        check_player_balance
+
+        puts "What do you want to do? "
+        puts
+        puts " 1) Play "
+        puts " 2) Show players stats"
+        puts " 3) Remove player from match"
+        puts " 4) Add player to match"
+        puts " 5) Change game type"
+        puts " q) quit"
+        input = gets.chomp
+
+        case input
+        when "1"
+          clear_screen
+          match = Match.new(@dealer, @players, @game_type)
+        when "2"
+          clear_screen
+          show_players
+        when "3"
+          clear_screen
+          delete_player
+        when "4"
+          clear_screen
+          create_single_player
+        when "5"
+          clear_screen
+          game_type
+        when "q"
+          puts "bye bye"
+          exit
+        else
+          clear_screen
+          puts "Comando non valido '#{input}'"
+        end
       end
     end
   end
 
-  
+  include Interface
+
+  def initialize
+    @players = []
+    @game_type = 1
+    run
+  end
+
+  private
+
+  def run
+    @dealer = Dealer.new
+    clear_screen
+    puts "Welcome to Las Vegas. Let's play Blackjack "
+    players_number
+    create_players(@players_number)
+    menu
+  end 
+
+  def create_players(players_number)
+    players_number.times do |player|
+      create_single_player
+    end
+  end
+
+  def show_players
+    @players.each_with_index do |player, index|
+      puts "#{index+1}) #{player.status}"
+    end
+  end
+
+  def create_single_player
+    puts "Enter player name"
+    name = gets.chomp.capitalize
+    @players << Player.new(name)
+  end
+
+  def delete_player
+    show_players
+    puts
+    puts "Which player you want do delete?"
+    player_to_del = gets.chomp.to_i
+    @players.delete_at(player_to_del-1)
+  end
+
+  def check_player_balance
+    @players.each_with_index do |player, index|
+      if player.balance == 0
+        puts "#{player.name} is out of the game, no money"
+        @players.delete_at(index)
+      end
+    end
+  end
 
 end
 
 blackjack = BlackJack.new
-game = GameDeck.new
-hand = Hand.new("roby")
-hand.receive_card(game)
-hand.receive_card(game)
-hand.receive_card(game)
 
-
-binding.pry
+# binding.pry
 
