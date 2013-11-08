@@ -224,6 +224,8 @@ class Match
     play
   end
 
+  private
+
   def play
     bet
     deal_card_dealer(false)
@@ -236,7 +238,6 @@ class Match
     if player_blackjack_how_many? == @player_hands.size && @dealer_hand.status == :blackjack
       who_win
     elsif player_blackjack_how_many? > 0 && @dealer_hand.status == :blackjack
-      player_turn
       who_win
     elsif player_blackjack_how_many? == @player_hands.size && @dealer_hand.status == :no_bust_no_bj
       who_win
@@ -247,8 +248,6 @@ class Match
     end 
 
   end
-
-  private
 
   def deal_card_dealer(show = true)
     @dealer_hand.receive_card(@deck, show)
@@ -310,9 +309,11 @@ class Match
     puts "Dealer has these cards"
     @dealer_hand.to_s
     puts
-
-    @player_hands.each_with_index do |hand,index|
+    i = 0
+    while (i < @player_hands.length)
+      hand = @player_hands[i]
       if hand.status == :no_bust_no_bj
+
         puts "#{hand.player.name}, you have these cards: "
         hand.to_s
 
@@ -342,22 +343,16 @@ class Match
               puts "You have #{hand.value}. What do you want to do?"
             end
           elsif choice == '3'
-            binding.pry
-            splitted_hands = []
             new_hand = Hand.new(hand.player)
             new_hand.cards << hand.split
             hand.receive_card(@deck)
             new_hand.receive_card(@deck)
-            splitted_hands << hand
-            splitted_hands << new_hand
-            check_player_blackjack(splitted_hands)
-            @backup = @player_hands.shift(index+1)
-            @player_hands = splitted_hands + @player_hands
-            exit
-            player_turn
+            new_hand.bet = hand.bet
+            @player_hands.insert(i,new_hand)
+            i -= 1
+            break
             
           elsif choice == '2'
-
             break
           else
             if !['1', '2', '3' ].include?(choice)
@@ -366,6 +361,8 @@ class Match
           end
         end
       end
+
+      i += 1
     end
 
   end
